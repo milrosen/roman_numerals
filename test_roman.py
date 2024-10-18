@@ -29,4 +29,12 @@ def test_add():
     print(s.pretty())
     assert s.val() == 30
 
-test_back_to_front()
+def test_table():
+    l1 = RomanNumeral(random.randint(50, 300))
+    l2 = RomanNumeral.from_str(RomanNumeral.place_letters[random.randint(3, len(RomanNumeral.place_letters) -1)])
+    res = l1.table_mul(RomanNumeral.multiplication_table(), l2, Cost())
+
+    print(l1.pretty(), l2.pretty(), res.pretty())
+    assert res.val() == l1.val() * l2.val()
+
+for i in range(50): test_table()

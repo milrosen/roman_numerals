@@ -62,7 +62,7 @@ def playDivision():
    cost = Cost()
 
    r1.division_algorithm(r2, cost)
-
+   input()
    for operation, left, right, ans in cost.ops:
       game(ans, f"{operation} {left} {right}", operation)
    

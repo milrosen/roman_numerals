@@ -35,13 +35,13 @@ class RomanNumeral:
                 r.values[i] += 1
         return r
     
-    def val(self):
+    def val(self) -> int:
         out = 0
         for val, amt in zip(RomanNumeral.place_values, self.values):
             out += val * amt
         return out
     
-    def pretty(self):
+    def pretty(self) -> str:
         out = ''
         for l,v in zip(RomanNumeral.place_letters, self.values):
             out += l * v
@@ -74,13 +74,13 @@ class RomanNumeral:
         return out
     
 
-    def naieve_mul(self, n, cost: Cost):
+    def naieve_mul(self, n, cost: Cost) -> Self:
         r = RomanNumeral(0)
         r.values = [x * n for x in self.values]
         cost.op("naieve_mul", self.pretty(), str(n), r.pretty())
         return r
     
-    def table_mul(self, table, o: Self, cost: Cost) -> tuple[Self, int]:
+    def table_mul(self, table, o: Self, cost: Cost) -> Self:
         out = ''
         for i, v1 in enumerate(self.values):
             for j, v2 in enumerate(o.values):
@@ -90,7 +90,7 @@ class RomanNumeral:
         cost.op("table_mul", self.pretty(), o.pretty(), out)
         return outr
     
-    def less(self, r, cost: Cost):
+    def less(self, r, cost: Cost) -> bool:
         cost.op("less", self.pretty(), r.pretty(), "left" if self.val() < r.val() else "right")
         return self.val() < r.val()
     
@@ -101,7 +101,7 @@ class RomanNumeral:
             return r2
         return h
     
-    def less_add(self, r1, r2, cost: Cost):
+    def less_add(self, r1, r2, cost: Cost) -> Self:
         return RomanNumeral.__compose__(p(RomanNumeral.less, self), p(RomanNumeral.sum, r1))(r2, cost)
 
     def division_algorithm(self, divisor: Self, cost):
