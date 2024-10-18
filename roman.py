@@ -165,23 +165,3 @@ class RomanNumeral:
         # out_string += f'{self.val()} ÷ {r.val()} = {math.floor(self.val() / r.val())} R{self.val() % r.val()}\n'
 
         return out_string, accl, RomanNumeral(self.val()-accr.val())
-            
-table = RomanNumeral.multiplication_table()
-
-x = RomanNumeral(random.randint(500,4000))
-y = RomanNumeral(random.randint(0,100))
-
-# x = RomanNumeral(3996)
-# y = RomanNumeral(3)
-
-os.system('color')
-pretty, res, rem = x.division_algorithm(y)
-print(pretty)
-
-# things to consider: number of times we multiply with table
-# scanning the numbers themselves
-# writing a symbol
-# how many symbols to keep in mind at the same time
-# eye movements for naieve mul, remembering how many times you've copied
-# counting backward, and also keeping track of the counting, grouping, and rewriting
-# idea: do the same thing for arabic numbers

@@ -13,7 +13,7 @@ def test_back_to_front():
         yr = RomanNumeral(y)
 
         strout, result, remainder = xr.division_algorithm(yr)
-
+        print(strout)
         true_result = x // y
         true_remainder = x % y
         assert true_remainder == remainder.val() and true_result == result.val()
