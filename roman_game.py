@@ -10,7 +10,11 @@ import time
 from cost import Cost
 from roman import RomanNumeral
 
-def game(ans, prompt):
+def out(prompt, time, game):
+   f = open(f"./logs/{game}.txt", "a")
+   f.write(f"{prompt}:{time}")
+
+def game(ans, prompt, game):
    print(prompt)
    start = time.time_ns()
    x = ""
@@ -21,8 +25,8 @@ def game(ans, prompt):
       if guesses > 4:
          print(ans)
          break
-   
    end = time.time_ns()
+   out(prompt, end, game)
    return end-start
 
 
@@ -34,7 +38,7 @@ def playSimplify():
    ans_numeral.simplify(Cost())
    ans = ans_numeral.pretty()
    
-   dur = game(ans, r)
+   dur = game(ans, r, "simplify")
 
    print(f"it took you {dur / 1000. / 1000. / 1000.} to get the correct answer")
 
@@ -47,8 +51,21 @@ def playSumSimplify():
    r3.simplify(Cost())
 
    ans = r3.pretty()
-   dur = game(ans, f"{r1.pretty()} + {r2.pretty()}")
+   dur = game(ans, f"{r1.pretty()} + {r2.pretty()}", "sumsimplify")
 
    print(f"it took you {dur / 1000. / 1000. / 1000.}s to get the right answer")
 
-playSumSimplify()
+def playDivision():
+   r1 = RomanNumeral(random.randint(100, 4000))
+   r2 = RomanNumeral(random.randint(1, 100))
+   print(f"{r1.pretty()} / {r2.pretty()} = ?")
+   cost = Cost()
+
+   r1.division_algorithm(r2, cost)
+
+   for operation, left, right, ans in cost.ops:
+      game(ans, f"{operation} {left} {right}", operation)
+   
+# playSumSimplify()
+for _ in range(40):
+   playDivision()

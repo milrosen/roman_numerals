@@ -59,31 +59,25 @@ class RomanNumeral:
     
     # in place
     def simplify(self, cost: Cost):
+        p = self.pretty()
         for i in range(len(self.values) -1, 0, -1):
             grouping = self.values[i] // RomanNumeral.group_letters[i]
             self.values[i-1] += grouping
             self.values[i]   %= RomanNumeral.group_letters[i]
+        cost.op("simplify", p, "", self.pretty())
             
 
     def sum(self, o: Self, cost: Cost) -> Self:
-        s_len = len(self.pretty())
-
-        self_considered, other_considered, result_len = [0, 0, 0]
-        for i, (sv, ov, l) in enumerate(zip(self.values, o.values, RomanNumeral.place_letters)): 
-            if sv == ov and sv == 0: continue
-            
-            self_considered += sv
-            other_considered += ov
-            result_len += sv + ov
-
         out = RomanNumeral(0)
         out.values = [i + j for i,j in zip(self.values, o.values)]
+        cost.op("sum", self.pretty(), o.pretty(), out.pretty())
         return out
     
 
     def naieve_mul(self, n, cost: Cost):
         r = RomanNumeral(0)
         r.values = [x * n for x in self.values]
+        cost.op("naieve_mul", self.pretty(), str(n), r.pretty())
         return r
     
     def table_mul(self, table, o: Self, cost: Cost) -> tuple[Self, int]:
@@ -92,13 +86,12 @@ class RomanNumeral:
             for j, v2 in enumerate(o.values):
                 t = table[i][j].pretty() * v1 * v2
                 out += t
-                if v1 != 0 and v2 != 0:
-                    letters1 = v1 * RomanNumeral.place_letters[i]
-                    letters2 = v2 * RomanNumeral.place_letters[j]
         outr = RomanNumeral.from_str(out)
+        cost.op("table_mul", self.pretty(), o.pretty(), out)
         return outr
     
     def less(self, r, cost: Cost):
+        cost.op("less", self.pretty(), r.pretty(), "left" if self.val() < r.val() else "right")
         return self.val() < r.val()
     
     def __compose__(f, g):
@@ -111,8 +104,7 @@ class RomanNumeral:
     def less_add(self, r1, r2, cost: Cost):
         return RomanNumeral.__compose__(p(RomanNumeral.less, self), p(RomanNumeral.sum, r1))(r2, cost)
 
-    def division_algorithm(self, divisor: Self):
-        cost = Cost()
+    def division_algorithm(self, divisor: Self, cost):
         table = RomanNumeral.multiplication_table()
         out_string = ''
 
@@ -125,6 +117,7 @@ class RomanNumeral:
 
         for letter in reversed(primitives):
             right_base = divisor.table_mul(table, letter, cost)
+            right_base.simplify(cost)
             out_string += '{0} -- {1}'.format(letter.pretty(), right_base.pretty()) + "\n"
             if self.less(right_base, cost): break
             stack.append((letter, right_base))

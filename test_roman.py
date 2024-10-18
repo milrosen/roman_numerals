@@ -12,7 +12,7 @@ def test_back_to_front():
         xr = RomanNumeral(x)
         yr = RomanNumeral(y)
 
-        strout, result, remainder = xr.division_algorithm(yr)
+        strout, result, remainder = xr.division_algorithm(yr, Cost())
         print(strout)
         true_result = x // y
         true_remainder = x % y
@@ -29,4 +29,4 @@ def test_add():
     print(s.pretty())
     assert s.val() == 30
 
-test_add()
+test_back_to_front()
