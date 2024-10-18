@@ -12,21 +12,21 @@ from roman import RomanNumeral
 
 def out(prompt, time, game):
    f = open(f"./logs/{game}.txt", "a")
-   f.write(f"{prompt}:{time}")
+   f.write(f"{prompt}:{time}\n")
 
 def game(ans, prompt, game):
    print(prompt)
    start = time.time_ns()
    x = ""
    guesses = 0
-   while x != ans:
+   while x.lower() != ans.lower():
       x = input()
       guesses += 1
       if guesses > 4:
          print(ans)
          break
    end = time.time_ns()
-   out(prompt, end, game)
+   out(prompt, (end - start), game)
    return end-start
 
 
@@ -64,7 +64,7 @@ def playDivision():
    r1.division_algorithm(r2, cost)
    input()
    for operation, left, right, ans in cost.ops:
-      game(ans, f"{operation} {left} {right}", operation)
+      game(ans, f"{operation}-{left}-{right}", operation)
    
 # playSumSimplify()
 for _ in range(40):

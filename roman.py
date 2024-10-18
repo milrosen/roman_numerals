@@ -71,6 +71,8 @@ class RomanNumeral:
         out = RomanNumeral(0)
         out.values = [i + j for i,j in zip(self.values, o.values)]
         cost.op("sum", self.pretty(), o.pretty(), out.pretty())
+        r = RomanNumeral(out.val())
+        r.simplify(cost)
         return out
     
 
