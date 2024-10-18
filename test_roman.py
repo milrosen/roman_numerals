@@ -26,7 +26,7 @@ def test_add():
     s = l.sum(r, c)
     s.simplify(c)
 
-    print(s.pretty(), c.pretty())
+    print(s.pretty())
     assert s.val() == 30
 
 test_add()
