@@ -74,6 +74,11 @@ class RomanNumeral:
             cost.op("sum", self.pretty(), o.pretty(), out.pretty())
         return out
     
+    def subtract(self, o, cost=Cost()) -> Self:
+        out = RomanNumeral(self.val() - o.val())
+        if out.val() != 0 and self.val() != 0: 
+            cost.op("subtract", self.pretty(), o.pretty(), out.pretty())
+        return out
 
     def naieve_mul(self, n, cost=Cost()) -> Self:
         r = RomanNumeral(0)
@@ -148,8 +153,7 @@ class RomanNumeral:
                 a, b, c, d = list(map(RomanNumeral.pretty, [l, _r, accl, accr]))
                 out_string += '\033[92mUNDER {0: <5} {1: <10} --- {2: <10} {3}\033[0m\n'.format(a * count, b, c, d)
             else:
-                if count == 0: continue
-
+                if accr.val() == 0: continue
                 self.less(accr.sum(divisor), cost)
 
                 _r = divisor.naieve_mul(count+1)
@@ -168,4 +172,5 @@ class RomanNumeral:
         out_string += f'{self.val()} ÷ {divisor.val()} = {accl.val()} R{self.val() - accr.val()}\n'
         # out_string += f'{self.val()} ÷ {r.val()} = {math.floor(self.val() / r.val())} R{self.val() % r.val()}\n'
 
-        return out_string, accl, RomanNumeral(self.val()-accr.val())
+        r = self.subtract(accr, cost)
+        return out_string, accl, r

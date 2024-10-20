@@ -80,7 +80,7 @@ def playSumSimplify():
 
    print(f"it took you {dur / 1000. / 1000. / 1000.}s to get the right answer")
 
-def playDivision():
+def playDivision(prompts=True):
    r1 = RomanNumeral(random.randint(100, 4000))
    r2 = RomanNumeral(random.randint(1, 100))
    print(f"{r1.pretty()} / {r2.pretty()} = ?")
@@ -88,7 +88,7 @@ def playDivision():
 
    phase = 0
    input()
-   r1.division_algorithm(r2, cost)
+   outstr, _, _ = r1.division_algorithm(r2, cost)
    prev = None
    for operation, left, right, ans in cost.steps[1:]:
       if ans == prev: continue
@@ -96,18 +96,21 @@ def playDivision():
          phase += 1
       else:
          if phase == 0 and operation == "less":
-            ans = "nl" if ans == "right" else "sub"
+            if ans == "right": continue
+            else: ans = "sub"
 
          if phase == 1 and operation == "less":
             ans = "l" if ans == "right" else "nl"
          
-         
-         prompt = f"{left} {operation} {right}"
+
+         prompt = f"{left} {operation} {right}" if prompts else ""
+
          dur = game(ans, prompt, operation)
          out(prompt, dur, operation) 
       prev = ans
+   print(outstr)
       
    
 # playSumSimplify()
 for _ in range(40):
-   playDivision()
+   playDivision(False)

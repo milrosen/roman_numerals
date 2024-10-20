@@ -1,3 +1,0 @@
-DCCCX naieve_mul 3:25186665900
-MDCCCC naieve_mul 2:68965410400
-LXXX naieve_mul 2:60898333100
