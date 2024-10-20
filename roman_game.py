@@ -14,7 +14,7 @@ def out(prompt, time, game):
    f = open(f"./logs/{game}.txt", "a")
    f.write(f"{prompt}:{time}\n")
 
-def game(ans, prompt, game):
+def game(ans, prompt, game):  
    print(prompt)
    start = time.time_ns()
    x = ""
