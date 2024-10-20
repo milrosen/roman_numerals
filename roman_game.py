@@ -35,9 +35,9 @@ def timerThread():
    threading.Thread(target=run, daemon=True).start()
 timerThread()
 
-def game(ans, prompt, game):  
+def game(ans, prompt, game, prompts):  
    print('\n')
-   print(prompt)
+   print(prompt if prompts else "")
    start = time.time_ns()
    timerThread.working = True
    timerThread.start = start
@@ -103,9 +103,9 @@ def playDivision(prompts=True):
             ans = "l" if ans == "right" else "nl"
          
 
-         prompt = f"{left} {operation} {right}" if prompts else ""
+         prompt = f"{left} {operation} {right}"
 
-         dur = game(ans, prompt, operation)
+         dur = game(ans, prompt, operation, prompts)
          out(prompt, dur, operation) 
       prev = ans
    print(outstr)
