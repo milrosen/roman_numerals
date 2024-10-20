@@ -7,26 +7,51 @@ The idea with this file is that
 '''
 import random
 import time
+import threading
 from cost import Cost
 from roman import RomanNumeral
+import ctypes
+kernel32 = ctypes.windll.kernel32
+kernel32.SetConsoleMode(kernel32.GetStdHandle(-11), 7)
 
 def out(prompt, time, game):
    f = open(f"./logs/{game}.txt", "a")
    f.write(f"{prompt}:{time}\n")
 
+def timerThread():
+   stepsize = 0.1 #seconds
+   timerThread.working = False
+   timerThread.start = time.time_ns()
+   timerThread.guesses = 0
+   def run():
+      while True:
+         if timerThread.working:
+            print('\033[s', end='\r')
+            print(f'\033[{timerThread.guesses + 2}A', end='\r')
+            
+            print(f"elapsed time: {(time.time_ns() - timerThread.start) / 1000. / 1000. / 1000. :.1f}", end='\r')
+            print('\033[u', end='')
+            time.sleep(stepsize)
+   threading.Thread(target=run, daemon=True).start()
+timerThread()
+
 def game(ans, prompt, game):  
+   print('\n')
    print(prompt)
    start = time.time_ns()
+   timerThread.working = True
+   timerThread.start = start
    x = ""
-   guesses = 0
+   timerThread.guesses = 0
    while x.lower() != ans.lower():
       x = input()
-      guesses += 1
-      if guesses > 4:
+      timerThread.guesses += 1
+      if timerThread.guesses > 6:
          print(ans)
          break
    end = time.time_ns()
-   out(prompt, (end - start), game)
+   # print("\n" * (timerThread.guesses - 1), end='')
+   timerThread.working = False
    return end-start
 
 
@@ -61,10 +86,27 @@ def playDivision():
    print(f"{r1.pretty()} / {r2.pretty()} = ?")
    cost = Cost()
 
-   r1.division_algorithm(r2, cost)
+   phase = 0
    input()
-   for operation, left, right, ans in cost.ops:
-      game(ans, f"{operation}-{left}-{right}", operation)
+   r1.division_algorithm(r2, cost)
+   prev = None
+   for operation, left, right, ans in cost.steps[1:]:
+      if ans == prev: continue
+      if (operation) == "begin phase":
+         phase += 1
+      else:
+         if phase == 0 and operation == "less":
+            ans = "nl" if ans == "right" else "sub"
+
+         if phase == 1 and operation == "less":
+            ans = "l" if ans == "right" else "nl"
+         
+         
+         prompt = f"{left} {operation} {right}"
+         dur = game(ans, prompt, operation)
+         out(prompt, dur, operation) 
+      prev = ans
+      
    
 # playSumSimplify()
 for _ in range(40):

@@ -58,52 +58,52 @@ class RomanNumeral:
 
     
     # in place
-    def simplify(self, cost: Cost):
+    def simplify(self, cost=Cost()):
         p = self.pretty()
         for i in range(len(self.values) -1, 0, -1):
             grouping = self.values[i] // RomanNumeral.group_letters[i]
             self.values[i-1] += grouping
             self.values[i]   %= RomanNumeral.group_letters[i]
-        cost.op("simplify", p, "", self.pretty())
+        if p != self.pretty(): cost.op("simplify", p, "", self.pretty())
             
 
-    def sum(self, o: Self, cost: Cost) -> Self:
+    def sum(self, o: Self, cost=Cost()) -> Self:
         out = RomanNumeral(0)
         out.values = [i + j for i,j in zip(self.values, o.values)]
-        cost.op("sum", self.pretty(), o.pretty(), out.pretty())
-        r = RomanNumeral(out.val())
-        r.simplify(cost)
+        if out.val() != 0 and self.val() != 0: 
+            cost.op("sum", self.pretty(), o.pretty(), out.pretty())
         return out
     
 
-    def naieve_mul(self, n, cost: Cost) -> Self:
+    def naieve_mul(self, n, cost=Cost()) -> Self:
         r = RomanNumeral(0)
         r.values = [x * n for x in self.values]
-        cost.op("naieve_mul", self.pretty(), str(n), r.pretty())
+        if n != 1: cost.op("naieve_mul", self.pretty(), str(n), r.pretty())
         return r
     
-    def table_mul(self, table, o: Self, cost: Cost) -> Self:
+    def table_mul(self, table, o: Self, cost=Cost()) -> Self:
         out = ''
         for i, v1 in enumerate(self.values):
             for j, v2 in enumerate(o.values):
                 t = table[i][j].pretty() * v1 * v2
                 out += t
         outr = RomanNumeral.from_str(out)
-        cost.op("table_mul", self.pretty(), o.pretty(), out)
+        if o.val() != 1: cost.op("table_mul", self.pretty(), o.pretty(), out)
         return outr
     
-    def less(self, r, cost: Cost) -> bool:
+    def less(self, r, cost=Cost() )-> bool:
         cost.op("less", self.pretty(), r.pretty(), "left" if self.val() < r.val() else "right")
         return self.val() < r.val()
     
     def __compose__(f, g):
         def h(r, cost):
             r1 = g(r, cost)
+            r1.simplify(cost)
             r2 = f(r1, cost)
             return r2
         return h
     
-    def less_add(self, r1, r2, cost: Cost) -> Self:
+    def less_add(self, r1, r2, cost=Cost()) -> Self:
         return RomanNumeral.__compose__(p(RomanNumeral.less, self), p(RomanNumeral.sum, r1))(r2, cost)
 
     def division_algorithm(self, divisor: Self, cost):
@@ -118,42 +118,51 @@ class RomanNumeral:
         stack = []
 
         for letter in reversed(primitives):
+            if letter.val() * divisor.val() > self.val():
+                self.less(RomanNumeral(letter.val() * divisor.val()), cost)
+                break
             right_base = divisor.table_mul(table, letter, cost)
             right_base.simplify(cost)
+            self.less(right_base, cost)
             out_string += '{0} -- {1}'.format(letter.pretty(), right_base.pretty()) + "\n"
-            if self.less(right_base, cost): break
-            stack.append((letter, right_base))
+            stack.insert(0, (letter, right_base))
         
         out_string += '----------------\n' 
         out_string += f'{self.pretty()} ÷ {divisor.pretty()}\n'
         out_string += '----------------\n'
 
+        cost.begin_phase("division")
         accl, accr = RomanNumeral(0), RomanNumeral(0)
-        for l, divisor in reversed(stack):
+        for l, divisor in stack:
             count = 0
-            while not self.less_add(accr, divisor, cost):
+            while not self.less_add(accr, divisor):
                 count += 1
-                r_ = divisor.naieve_mul(count, cost)
-                r_.simplify(cost)
+                
+                _r = divisor.naieve_mul(count)
+                _r.simplify()
                 accr = accr.sum(divisor, cost)
                 accr.simplify(cost)
                 accl = accl.sum(l, cost)
                 accl.simplify(cost)
 
-                a, b, c, d = list(map(RomanNumeral.pretty, [l, r_, accl, accr]))
+                a, b, c, d = list(map(RomanNumeral.pretty, [l, _r, accl, accr]))
                 out_string += '\033[92mUNDER {0: <5} {1: <10} --- {2: <10} {3}\033[0m\n'.format(a * count, b, c, d)
             else:
+                if count == 0: continue
+
+                self.less(accr.sum(divisor), cost)
+
+                _r = divisor.naieve_mul(count+1)
                 amt = RomanNumeral.group_letters[RomanNumeral.place_letters.index(l.pretty())]
+
                 if amt-1 == count: continue
+                _r.simplify()
+                accr_over = accr.sum(divisor)
+                accr_over.simplify()
+                accl_over = accl.sum(l)
+                accl_over.simplify()
 
-                r_ = divisor.naieve_mul(count+1, cost)
-                r_.simplify(cost)
-                accr_over = accr.sum(divisor, cost)
-                accr_over.simplify(cost)
-                accl_over = accl.sum(l, cost)
-                accl_over.simplify(cost)
-
-                a, b, c, d = list(map(RomanNumeral.pretty, [l, r_, accl_over, accr_over]))
+                a, b, c, d = list(map(RomanNumeral.pretty, [l, _r, accl_over, accr_over]))
                 out_string += '\033[91mOVER  {0: <5} {1: <10} --- {2: <10} {3}\033[0m\n'.format(a * (count+1), b, c, d)
         out_string += f'{self.pretty()} ÷ {divisor.pretty()} = {accl.pretty()} R {RomanNumeral(self.val() - accr.val()).pretty()}\n'
         out_string += f'{self.val()} ÷ {divisor.val()} = {accl.val()} R{self.val() - accr.val()}\n'
