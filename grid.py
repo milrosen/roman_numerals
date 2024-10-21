@@ -16,6 +16,9 @@ class Point():
     
     def __add__(self, other):
         return Point(self.x + other.x, self.y + other.y)
+    
+    def __sub__(self, other):
+        return Point(self.x - other.x, self.y - other.y)
 
 
 class Grid():
@@ -63,14 +66,29 @@ class Grid():
     
     def drag(self, loc: Point):
         self.origin += loc
-        self.eye = loc
+        self.eye += loc
         self.pencil += loc
     
     def pop(self):
         self.eye = self.eye_stack.pop() + Point(0, 0)
+    @logger("eye")
+    def pan(self, loc: Point):
+            self.origin += loc
+            self.eye = self.origin + Point(0, 0)
 
+    def newline(self):
+        self.pan(Point(0, 1))  
+
+    def get_absolute_point(self, loc: Point):
+        return loc + self.origin
+
+    @logger("pencil")
     def nudge_pencil(self, dir: Point):
-        self.move_pencil(self.pencil + dir)
+        self.pencil = self.pencil + dir
+
+    @logger("eye")
+    def look(self, loc: Point):
+        self.eye = loc + self.origin
     
     @logger("pencil eye write")
     def write(self, char: str, loc: Point = None):
@@ -85,7 +103,7 @@ class Grid():
     
     # @logger(["pencil", "eye"])
     def move_pencil(self, loc: Point=None):
-        if loc is None: loc = self.eye + Point(0, 0)
+        if loc is None: loc = self.eye - self.origin
         self.pencil = loc + self.origin
 
     def write_s(self, string: str):
@@ -93,9 +111,9 @@ class Grid():
             self.write(char)
     def pretty(self):
         out = ""
+        out += f"Pencil: {list(self.pencil + Point(0, 0))}, Origin: {list(self.origin + Point(0, 0))}, Eye: {list(self.eye + Point(0, 0))}\n"
         for row in self.grid:
             out += "".join(row) + "|\n"
-        out += f"Pencil: {list(self.pencil + Point(0, 0))}, Origin: {list(self.origin + Point(0, 0))}, Eye: {list(self.eye + Point(0, 0))}"
         return out
     
     
@@ -105,6 +123,9 @@ class Grid():
     @logger("eye")
     def get_absolute(self, loc: Point):
         return self.grid[loc.y][loc.x]
+    
+    def to_relative(self, loc: Point):
+        return loc - self.origin
 
     def get_s(self, start: Point, length: int):
         result = ""

@@ -4,16 +4,69 @@ class Roman():
 
     def __init__(self, grid: Grid) -> None:
         self.grid = grid
+    
         self.logs = []
 
     vals = [(1000, "M"), (500, "D"), (100, "C"), (50, "L"), (10, "X"), (5, "V"), (1, "I")]
+    letters = ["I", "V", "X", "L", "C", "D", "M"]
+
+    
+    def divide(self, abosolute_dividend_loc: Point) -> None:
+        letter_idx = 1
+        self.grid.push()
+        self.grid.move_pencil(Point(-2, 0))
+        self.grid.write("I")
+        self.grid.pop()
+        s = [self.grid.get_absolute_point(Point(0, 0))]
+
+        while not self.greater(self.grid.to_relative(abosolute_dividend_loc)):
+            self.grid.look(Point(0, 0))
+            self.grid.newline()
+            self.sum(self.grid.to_relative(s[0]))
+            self.grid.newline()
+            self.grid.push()
+            self.grid.move_pencil(Point(-2, 3))
+            self.grid.write(self.letters[letter_idx])
+            self.grid.pop()
+            self.table_multiply(Point(-2, 3))
+            self.grid.newline()
+            self.simplify()
+            self.grid.pan(Point(0, 2))
+            s.append(self.grid.get_absolute_point(Point(0, 0)))
+            
+            letter_idx += 1
+        s.pop()
+        self.grid.pan(Point(-2, 1))
+        for loc in reversed(s):
+            while not self.greater(self.grid.to_relative(abosolute_dividend_loc)):
+                self.grid.look(Point(0, 0))
+                self.sum(self.grid.to_relative(loc))
+                self.grid.newline()
+                self.simplify()
+                self.grid.pan(Point(20, -1))
+                self.sum(self.grid.to_relative(loc) + Point(-2, 0))
+                self.grid.newline()
+                self.simplify()
+                self.grid.pan(Point(-20, 2))
+                self.grid.move_pencil(Point(0, 0))
+            else:
+                self.grid.newline()
+                self.grid.look(Point(0, 0))
+                self.sum(Point(0, -4))
+                self.grid.pan(Point(20, 0))
+                self.sum(Point(0, -4))
+                self.grid.pan(Point(-20, 0))
+                self.grid.newline()
+
+        
+
 
     def write_from_decimal(self, number: int) -> None:
         for (val, letter) in self.vals:
             self.grid.write_s(letter * (number // val))
             number %= val
 
-    def compare(self, loc: Point) -> bool:
+    def greater(self, loc: Point) -> bool:
         while True:
             l1 = self.grid.get()
             self.grid.push()
@@ -33,7 +86,7 @@ class Roman():
         self.grid.push()
         letter = self.grid.get(loc)
         self.grid.pop()
-
+        
         while (l := self.grid.get()) != " ":
             out = self.recall_multiply_fact(l, letter)
             self.grid.push()
@@ -67,7 +120,8 @@ class Roman():
             self.grid.nudge_pencil(Point(1, 1))
             self.grid.push()
             grouped_letter = self.recall_group_letter(prev_letter)
-            if (groups > 0): self.grid.write(grouped_letter)
+            if (groups > 0): 
+                self.grid.write(grouped_letter)
             self.grid.pop()
 
             self.grid.shift_back()
@@ -80,7 +134,6 @@ class Roman():
 
         grouping = self.recall_grouping_fact(prev_letter)
         next_letter = self.recall_group_letter(prev_letter)
-        print(next_letter[0])
         groups = count_letter // grouping
         self.grid.move_pencil()
         self.grid.nudge_pencil(Point(1, 1))
@@ -92,12 +145,11 @@ class Roman():
         count_letter = 0
         while (l := self.grid.get(Point(count_letter, 0))) != " ":  
             grouped_letter = self.grid.get(Point(count_letter, 1))
-            print(grouped_letter)
             if grouped_letter == " ":
                 self.grid.write(l, Point(count_out, 2))
             else:
                 self.grid.write(grouped_letter, Point(count_out, 2))
-                count_letter += self.recall_grouping_fact(l) -1
+                count_letter += self.recall_grouping_fact(l) - 1
 
             count_letter += 1
             count_out += 1
@@ -113,7 +165,7 @@ class Roman():
             self.grid.push()
 
             l2 = self.grid.get(other_start)
-            print(l1, l2, list(self.grid.eye))
+            print(l1, l2)
             ord = self.recall_ordering_fact(l1, l2)
             if ord > 0:
                 self.grid.write(l1)
