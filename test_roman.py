@@ -1,40 +1,86 @@
-import random
+from grid import Point, Grid
+from roman import Roman
 
-from cost import Cost
-from roman import RomanNumeral
+def test_roman_sum():
+    g = Grid()
+    g.push()
+    g.write_s("MDCVII CLXVI")
+    g.pop()
 
-def test_back_to_front():
-    n=40
-    divisiors = [random.randint(1, 100) for _ in range(n)]
-    dividends = [random.randint(400, 1000) for _ in range(n)]
+    r = Roman(g)
+    r.sum(Point(7, 0))
 
-    for x, y in zip(dividends, divisiors):
-        xr = RomanNumeral(x)
-        yr = RomanNumeral(y)
+    for log in r.logs:
+        print(log)
+    print(g.pretty())
+    print(g.pretty_logs())
+    assert g.get_s(Point(0, 1), 11) == "MDCCLXVVIII"
 
-        strout, result, remainder = xr.division_algorithm(yr, Cost())
-        print(strout)
-        true_result = x // y
-        true_remainder = x % y
-        assert true_remainder == remainder.val() and true_result == result.val()
+def test_origin():
+    g = Grid()
+    g.write_s("ORIGIN")
+    g.drag(Point(2,2))
 
-def test_add():
-    l = RomanNumeral(27)
-    r = RomanNumeral(3)
+    g.move_pencil(Point(0, 0))
+    g.push()
+    g.write_s("XX L")
+    g.pop()
 
-    c = Cost()
-    s = l.sum(r, c)
-    s.simplify(c)
+    assert g.get() == "X"
 
-    print(s.pretty())
-    assert s.val() == 30
+    r = Roman(g)
+    r.sum(Point(3, 0))
+    print(g.pretty())
+    assert(g.get_s(Point(0, 1), 3) == "LXX")
+
+def test_simplify():
+    g = Grid()
+
+    g.push()
+    g.write_s("MDDCVIIIII")
+    g.pop()
+
+    r = Roman(g)
+
+    r.simplify()
+    print(g.pretty_logs())
+    print(g.pretty())
+    print(r.logs)
+    assert g.get_s(Point(0, 2), 4) == "MMCX"
 
 def test_table():
-    l1 = RomanNumeral(random.randint(50, 300))
-    l2 = RomanNumeral.from_str(RomanNumeral.place_letters[random.randint(3, len(RomanNumeral.place_letters) -1)])
-    res = l1.table_mul(RomanNumeral.multiplication_table(), l2, Cost())
+    g = Grid()
+    g.push()
+    g.write_s("L XXVI")
+    g.pop()
+    g.drag(Point(2, 0))
+    print(g.pretty())
 
-    print(l1.pretty(), l2.pretty(), res.pretty())
-    assert res.val() == l1.val() * l2.val()
+    r = Roman(g)
+    r.table_multiply(Point(-2, 0))
+    print(g.pretty_logs())
+    print(g.pretty())
+    print(r.logs)
+    assert g.get_s(Point(0, 1), 6) == "DDCCLL"
 
-for i in range(50): test_table()
+def test_compare():
+    g = Grid()
+    g.push()
+    g.write_s("D MDXVI")
+    g.pop()
+
+    r = Roman(g)
+    out = r.compare(Point(3, 0))
+    print(g.pretty_logs())
+    print(g.pretty())
+    print(r.logs)
+    assert not out
+
+def test_write_from_decimal():
+    g = Grid()
+    g.push()
+    r = Roman(g)
+    r.write_from_decimal(1234)
+    print(g.pretty_logs())  
+    print(g.pretty())
+    assert g.get_s(Point(0, 0), 10) == "MCCXXXIIII"

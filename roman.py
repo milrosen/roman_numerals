@@ -1,176 +1,179 @@
-import math
-from cost import Cost
-from typing import Self
-import os
-import random
-from functools import partial as p
+from grid import Grid, Point
 
-class RomanNumeral:
-    place_values  = [1000, 500, 100, 50, 10, 5, 1]
-    group_letters = [ 5,   2,   5,   2,   5,   2,   5]
-    place_letters = ['M', 'D', 'C', 'L', 'X', 'V', 'I']
-    '''
-    each Roman Numeral is represented by an array containin the number of letters of that type
-        [3, 1, 1, 1, 4, 0, 1] = MMMDCLXXXXI = 3691
+class Roman():
 
-    functions are not in-place unless specified
+    def __init__(self, grid: Grid) -> None:
+        self.grid = grid
+        self.logs = []
 
-    operations return (cost, result) tuples
-    '''
-    def __init__(self, n: int) -> None:
-        self.values = []
-        for v in RomanNumeral.place_values:
-            self.values.append(math.floor(n / v))
-            n %= v
+    vals = [(1000, "M"), (500, "D"), (100, "C"), (50, "L"), (10, "X"), (5, "V"), (1, "I")]
 
-    def first_nonzero(self, i):
-        for l, v in list(zip(RomanNumeral.place_letters, self.values))[i:]:
-            if v != 0: return l
+    def write_from_decimal(self, number: int) -> None:
+        for (val, letter) in self.vals:
+            self.grid.write_s(letter * (number // val))
+            number %= val
 
-    def from_str(s: str) -> Self:
-        r = RomanNumeral(0)
-        for l in s:
-            if RomanNumeral.place_letters.__contains__(l):
-                i = RomanNumeral.place_letters.index(l)
-                r.values[i] += 1
-        return r
-    
-    def val(self) -> int:
-        out = 0
-        for val, amt in zip(RomanNumeral.place_values, self.values):
-            out += val * amt
-        return out
-    
-    def pretty(self) -> str:
-        out = ''
-        for l,v in zip(RomanNumeral.place_letters, self.values):
-            out += l * v
-        return out
+    def compare(self, loc: Point) -> bool:
+        while True:
+            l1 = self.grid.get()
+            self.grid.push()
+            l2 = self.grid.get(loc)
+            loc += Point(1, 0)
+            self.grid.pop()
+            self.grid.shift_one()
+            o = self.recall_ordering_fact(l1, l2)
 
-    def multiplication_table():
-        table = []
-        for i in RomanNumeral.place_values:
-            row = []
-            for j in RomanNumeral.place_values:
-                row.append(RomanNumeral(i * j))
-            table.append(row)
-        return table
+            if o == 0: continue
+            return o > 0
 
-    
-    # in place
-    def simplify(self, cost=Cost()):
-        p = self.pretty()
-        for i in range(len(self.values) -1, 0, -1):
-            grouping = self.values[i] // RomanNumeral.group_letters[i]
-            self.values[i-1] += grouping
-            self.values[i]   %= RomanNumeral.group_letters[i]
-        if p != self.pretty(): cost.op("simplify", p, "", self.pretty())
-            
 
-    def sum(self, o: Self, cost=Cost()) -> Self:
-        out = RomanNumeral(0)
-        out.values = [i + j for i,j in zip(self.values, o.values)]
-        if out.val() != 0 and self.val() != 0: 
-            cost.op("sum", self.pretty(), o.pretty(), out.pretty())
-        return out
-    
-    def subtract(self, o, cost=Cost()) -> Self:
-        out = RomanNumeral(self.val() - o.val())
-        if out.val() != 0 and self.val() != 0: 
-            cost.op("subtract", self.pretty(), o.pretty(), out.pretty())
-        return out
-
-    def naieve_mul(self, n, cost=Cost()) -> Self:
-        r = RomanNumeral(0)
-        r.values = [x * n for x in self.values]
-        if n != 1: cost.op("naieve_mul", self.pretty(), str(n), r.pretty())
-        return r
-    
-    def table_mul(self, table, o: Self, cost=Cost()) -> Self:
-        out = ''
-        for i, v1 in enumerate(self.values):
-            for j, v2 in enumerate(o.values):
-                t = table[i][j].pretty() * v1 * v2
-                out += t
-        outr = RomanNumeral.from_str(out)
-        if o.val() != 1: cost.op("table_mul", self.pretty(), o.pretty(), out)
-        return outr
-    
-    def less(self, r, cost=Cost() )-> bool:
-        cost.op("less", self.pretty(), r.pretty(), "left" if self.val() < r.val() else "right")
-        return self.val() < r.val()
-    
-    def __compose__(f, g):
-        def h(r, cost):
-            r1 = g(r, cost)
-            r1.simplify(cost)
-            r2 = f(r1, cost)
-            return r2
-        return h
-    
-    def less_add(self, r1, r2, cost=Cost()) -> Self:
-        return RomanNumeral.__compose__(p(RomanNumeral.less, self), p(RomanNumeral.sum, r1))(r2, cost)
-
-    def division_algorithm(self, divisor: Self, cost):
-        table = RomanNumeral.multiplication_table()
-        out_string = ''
-
-        out_string += '----------------\n'
-        out_string += f'{self.pretty()} ÷ {divisor.pretty()}\n'
-        out_string += '---------------\n'
-
-        primitives = list(map(RomanNumeral.from_str, RomanNumeral.place_letters))
-        stack = []
-
-        for letter in reversed(primitives):
-            if letter.val() * divisor.val() > self.val():
-                self.less(RomanNumeral(letter.val() * divisor.val()), cost)
-                break
-            right_base = divisor.table_mul(table, letter, cost)
-            right_base.simplify(cost)
-            self.less(right_base, cost)
-            out_string += '{0} -- {1}'.format(letter.pretty(), right_base.pretty()) + "\n"
-            stack.insert(0, (letter, right_base))
         
-        out_string += '----------------\n' 
-        out_string += f'{self.pretty()} ÷ {divisor.pretty()}\n'
-        out_string += '----------------\n'
+    def table_multiply(self, loc: Point):
+        count_out = 0
+        self.grid.push()
+        letter = self.grid.get(loc)
+        self.grid.pop()
 
-        cost.begin_phase("division")
-        accl, accr = RomanNumeral(0), RomanNumeral(0)
-        for l, divisor in stack:
-            count = 0
-            while not self.less_add(accr, divisor):
-                count += 1
-                
-                _r = divisor.naieve_mul(count)
-                _r.simplify()
-                accr = accr.sum(divisor, cost)
-                accr.simplify(cost)
-                accl = accl.sum(l, cost)
-                accl.simplify(cost)
+        while (l := self.grid.get()) != " ":
+            out = self.recall_multiply_fact(l, letter)
+            self.grid.push()
+            self.grid.move_pencil(Point(count_out, 1))
+            self.grid.write_s(out)
+            self.grid.pop()
+            self.grid.shift_one()
+            count_out += len(out)
 
-                a, b, c, d = list(map(RomanNumeral.pretty, [l, _r, accl, accr]))
-                out_string += '\033[92mUNDER {0: <5} {1: <10} --- {2: <10} {3}\033[0m\n'.format(a * count, b, c, d)
+
+    def simplify(self) -> None:
+        self.grid.move_pencil(Point(0, 1))
+        count_letter = 0
+        prev_letter = ""
+        
+        while self.grid.get() != " ":
+            self.grid.shift_one()
+        
+        self.grid.shift_back()
+        prev_letter = self.grid.get()
+        
+        while (l := self.grid.get()) != " ":
+            if l == prev_letter: 
+                count_letter += 1
+                self.grid.shift_back()
+                continue
+            
+            grouping = self.recall_grouping_fact(prev_letter)
+            groups = count_letter // grouping
+            self.grid.move_pencil()
+            self.grid.nudge_pencil(Point(1, 1))
+            self.grid.push()
+            grouped_letter = self.recall_group_letter(prev_letter)
+            if (groups > 0): self.grid.write(grouped_letter)
+            self.grid.pop()
+
+            self.grid.shift_back()
+            if grouped_letter == l: 
+                count_letter = 1 + groups
+            else: 
+                count_letter = 1
+
+            prev_letter = l
+
+        grouping = self.recall_grouping_fact(prev_letter)
+        next_letter = self.recall_group_letter(prev_letter)
+        print(next_letter[0])
+        groups = count_letter // grouping
+        self.grid.move_pencil()
+        self.grid.nudge_pencil(Point(1, 1))
+        self.grid.push()
+        if groups > 0: self.grid.write_s(next_letter + "")
+        self.grid.pop()
+
+        count_out = 0
+        count_letter = 0
+        while (l := self.grid.get(Point(count_letter, 0))) != " ":  
+            grouped_letter = self.grid.get(Point(count_letter, 1))
+            print(grouped_letter)
+            if grouped_letter == " ":
+                self.grid.write(l, Point(count_out, 2))
             else:
-                if accr.val() == 0: continue
-                self.less(accr.sum(divisor), cost)
+                self.grid.write(grouped_letter, Point(count_out, 2))
+                count_letter += self.recall_grouping_fact(l) -1
 
-                _r = divisor.naieve_mul(count+1)
-                amt = RomanNumeral.group_letters[RomanNumeral.place_letters.index(l.pretty())]
+            count_letter += 1
+            count_out += 1
 
-                if amt-1 == count: continue
-                _r.simplify()
-                accr_over = accr.sum(divisor)
-                accr_over.simplify()
-                accl_over = accl.sum(l)
-                accl_over.simplify()
 
-                a, b, c, d = list(map(RomanNumeral.pretty, [l, _r, accl_over, accr_over]))
-                out_string += '\033[91mOVER  {0: <5} {1: <10} --- {2: <10} {3}\033[0m\n'.format(a * (count+1), b, c, d)
-        out_string += f'{self.pretty()} ÷ {divisor.pretty()} = {accl.pretty()} R {RomanNumeral(self.val() - accr.val()).pretty()}\n'
-        out_string += f'{self.val()} ÷ {divisor.val()} = {accl.val()} R{self.val() - accr.val()}\n'
-        # out_string += f'{self.val()} ÷ {r.val()} = {math.floor(self.val() / r.val())} R{self.val() % r.val()}\n'
+        
+    def sum(self, other_start: Point) -> None:
+        l1 = ""
+        l2 = ""
+        self.grid.move_pencil(Point(0, 1))
+        while l1 != " " or l2 != " ":
+            l1 = self.grid.get()
+            self.grid.push()
 
-        r = self.subtract(accr, cost)
-        return out_string, accl, r
+            l2 = self.grid.get(other_start)
+            print(l1, l2, list(self.grid.eye))
+            ord = self.recall_ordering_fact(l1, l2)
+            if ord > 0:
+                self.grid.write(l1)
+                self.grid.pop()
+                self.grid.shift_one()
+            if ord < 0:
+                self.grid.push()
+                self.grid.write(l2)
+                self.grid.pop()
+                self.grid.pop()
+                other_start.x += 1
+            if ord == 0:
+                self.grid.write_s(l1 + l2)
+                self.grid.pop()
+                self.grid.shift_one()
+                other_start.x += 1
+
+    def recall_ordering_fact(self, l1, l2):
+        l1, l2 = l1.lower(), l2.lower()
+        if l1 != " " and l2 != " ": 
+            self.logs.append(("recalls ordering fact", l1, l2))
+
+        ordering = [" ", "i", "v", "x", "l", "c", "d", "m"]
+        return ordering.index(l1) - ordering.index(l2)
+    
+    def recall_grouping_fact(self, l1):
+        l1 = l1.lower()
+        self.logs.append(("recalls grouping fact", l1))
+        grouping = {"i": 5, "v": 2, "x": 5, "l": 2, "c": 5, "d": 2, "m": 20}
+
+        return grouping[l1]
+    
+    def recall_group_letter(self, l1):
+        l1 = l1.lower()
+        self.logs.append(("recalls group letter", l1))
+        group = {"i": "v", "v": "x", "x": "l", "l": "c", "c": "d", "d": "m", "m": "m"}
+        
+        return group[l1].upper()
+    
+    def recall_ungroup_letter(self, l1):
+        l1 = l1.lower()
+        self.logs.append(("recalls ungroup letter", l1))
+
+    def index(l):
+        return [" ", "i", "v", "x", "l", "c", "d", "m"].index(l) - 1
+
+    def recall_multiply_fact(self, l1, l2):
+        
+        l1, l2 = l1.lower(), l2.lower()
+
+        self.logs.append(("recalls multiply fact", l1, l2))
+
+        table = [
+            ["i", "v",   "x",    "l",     "c",    "d",    "m"],
+            ["v", "xxv", "l",    "ccl",   "d",    "mmd",  "m"*5],
+            ["x", "l",   "c",    "d",     "m",    "m"*5,  "m"*10],
+            ["l", "ccl", "d",    "mmd",   "m"*5,  "m"*25, "m"],
+            ["c", "d",   "m",    "m"*5,   "m"*10, "m",    "m"],
+            ["d", "mmd", "m"*5,  "m"*25,  "m",    "m",    "m"],
+            ["m", "m"*5, "m"*10, "m",     "m",    "m",    "m"],  
+        ]
+
+        return table[Roman.index(l1)][Roman.index(l2)].upper()
