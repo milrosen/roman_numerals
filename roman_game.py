@@ -101,9 +101,8 @@ def playDivision(prompts=True):
 
          if phase == 1 and operation == "less":
             ans = "l" if ans == "right" else "nl"
-         
-
-         prompt = f"{left} {operation} {right}"
+      
+         prompt = f"{operation}-{left}-{right}"
 
          dur = game(ans, prompt, operation, prompts)
          out(prompt, dur, operation) 
