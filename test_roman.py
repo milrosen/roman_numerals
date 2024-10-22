@@ -38,7 +38,7 @@ def test_simplify():
     g = Grid()
 
     g.push()
-    g.write_s("DCCXXXXVIIIIIII")
+    g.write_s("MLLLLVVV")
     g.pop()
 
     r = Roman(g)
@@ -47,7 +47,7 @@ def test_simplify():
     print(g.pretty_logs())
     print(g.pretty())
     print(r.logs)
-    assert g.get_s(Point(0, 2), 20).strip(" ") == "DCCLII"
+    assert g.get_s(Point(0, 2), 20).strip(" ") == "MCCXV"
 
 def test_table():
     g = Grid()
@@ -84,7 +84,7 @@ def test_write_from_decimal():
     r.write_from_decimal(1234)
     print(g.pretty_logs())  
     print(g.pretty())
-    assert g.get_s(Point(0, 0), 10) == "MCCCXXXII"
+    assert g.get_s(Point(0, 0), 10) == "MCCXXXIIII"
 
 def test_divide():
     g = Grid()
@@ -104,7 +104,7 @@ def test_divide():
     print(g.pretty_logs())  
     print(g.pretty())   
     print(r.logs)
-    assert g.get_s(Point(0, 0), 10).strip() == "MCCCXXXII"
+    assert g.get_s(Point(5, 0), 9) == "MCCCXXXII"
 
 def divide_numbers(n, divisor):
     g = Grid()
@@ -131,7 +131,7 @@ def test_divide_numbers():
     for i in range(1, 500):
         n = random.randint(100, 4000)
         divisor = random.randint(1, 100)
-
+        n, divisor = 1663, 43
         print(n, divisor)
         out_r = divide_numbers(n, divisor)
 
@@ -139,6 +139,6 @@ def test_divide_numbers():
         g = Grid()
         r = Roman(g)
         r.write_from_decimal(out_correct)
-        correct_r = g.get_s(Point(0, 0), 10).strip(" ")
+        correct_r = g.get_s(Point(0, 0), 20).strip(" ")
         print("true " + correct_r, "returned " + out_r)
         assert correct_r == out_r

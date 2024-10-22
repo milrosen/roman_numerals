@@ -105,44 +105,60 @@ class Roman():
         count_letter = 0
         prev_letter = ""
         
-        while self.grid.get() != " ":
+        while (l := self.grid.get()) != " ":
             self.grid.shift_one()
-        
+
         self.grid.shift_back()
         prev_letter = self.grid.get()
-        
+
         while (l := self.grid.get()) != " ":
-            if l == prev_letter: 
-                count_letter += 1
-                self.grid.shift_back()
-                continue
-            
-            grouping = self.recall_grouping_fact(prev_letter)
-            groups = count_letter // grouping
-            self.grid.move_pencil()
-            self.grid.nudge_pencil(Point(1, 1))
-            self.grid.push()
-            grouped_letter = self.recall_group_letter(prev_letter)
-            if (groups > 0): 
-                self.grid.write(grouped_letter)
-            self.grid.pop()
-
             self.grid.shift_back()
-            if grouped_letter == l: 
-                count_letter = 1 + groups
-            else: 
-                count_letter = 1
 
+            if l == prev_letter:
+                count_letter += 1
+                print(l, count_letter)
+                continue
+
+            self.grid.push()
+            self.grid.nudge_eye(Point(2, 0))
+            group_letter = self.grid.get()
+            grouping = self.recall_grouping_fact(group_letter)
+            grouped_letter = self.recall_group_letter(group_letter)
+            
+            groups = count_letter // grouping
+            print(l, group_letter, count_letter, grouped_letter, grouping, groups)
+
+            for _ in range(groups):
+                self.grid.push()
+                self.grid.move_pencil()
+                self.grid.nudge_pencil(Point(0, 1))
+                self.grid.write(grouped_letter)
+                self.grid.pop()
+                self.grid.nudge_eye(Point(grouping, 0))
+            
+            count_letter = 1
+            if l == grouped_letter: 
+                count_letter += groups
+            self.grid.pop()
             prev_letter = l
-
-        grouping = self.recall_grouping_fact(prev_letter)
-        next_letter = self.recall_group_letter(prev_letter)
-        groups = count_letter // grouping
-        self.grid.move_pencil()
-        self.grid.nudge_pencil(Point(1, 1))
+        
+        self.grid.shift_back()
         self.grid.push()
-        if groups > 0: self.grid.write_s(next_letter + "")
-        self.grid.pop()
+        self.grid.nudge_eye(Point(2, 0))
+        group_letter = self.grid.get()
+        grouping = self.recall_grouping_fact(group_letter)
+        grouped_letter = self.recall_group_letter(group_letter)
+        groups = count_letter // grouping
+
+        for _ in range(groups):
+            self.grid.push()
+            self.grid.move_pencil()
+            self.grid.nudge_pencil(Point(0, 1))
+            self.grid.write(grouped_letter)
+            self.grid.pop()
+            self.grid.nudge_eye(Point(grouping, 0))
+
+        self.grid.look(Point(0, 0))
 
         count_out = 0
         count_letter = 0
