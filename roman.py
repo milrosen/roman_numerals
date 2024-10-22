@@ -35,31 +35,33 @@ class Roman():
             s.append(self.grid.get_absolute_point(Point(0, 0)))
             
             letter_idx += 1
-        s.pop()
+        if len(s) != len(self.letters): s.pop()
         self.grid.pan(Point(-2, 1))
         for loc in reversed(s):
+            count = 1
             while not self.greater(self.grid.to_relative(abosolute_dividend_loc)):
+                l = self.grid.get(self.grid.to_relative(loc) + Point(-2, 0))
+                if count >= self.recall_grouping_fact(l): break
                 self.grid.look(Point(0, 0))
                 self.sum(self.grid.to_relative(loc))
                 self.grid.newline()
                 self.simplify()
-                self.grid.pan(Point(20, -1))
+                self.grid.pan(Point(25, -1))
                 self.sum(self.grid.to_relative(loc) + Point(-2, 0))
                 self.grid.newline()
                 self.simplify()
-                self.grid.pan(Point(-20, 2))
+                self.grid.pan(Point(-25, 2))
                 self.grid.move_pencil(Point(0, 0))
+                count += 1
             else:
                 self.grid.newline()
                 self.grid.look(Point(0, 0))
                 self.sum(Point(0, -4))
-                self.grid.pan(Point(20, 0))
+                self.grid.pan(Point(25, 0))
                 self.sum(Point(0, -4))
-                self.grid.pan(Point(-20, 0))
+                self.grid.pan(Point(-25, 0))
                 self.grid.newline()
-
-        
-
+        self.grid.pan(Point(20, 0))
 
     def write_from_decimal(self, number: int) -> None:
         for (val, letter) in self.vals:
@@ -76,7 +78,6 @@ class Roman():
             self.grid.pop()
             self.grid.shift_one()
             o = self.recall_ordering_fact(l2, l1)
-            
 
             if o == 0: continue
             return o <= 0
@@ -150,8 +151,16 @@ class Roman():
             if grouped_letter == " ":
                 self.grid.write(l, Point(count_out, 2))
             else:
-                self.grid.write(grouped_letter, Point(count_out, 2))
-                count_letter += self.recall_grouping_fact(l) - 1
+                grouping = self.recall_grouping_fact(l)
+                chain_grouped_letter = self.grid.get(Point(count_letter + grouping - 1, 1))
+                while chain_grouped_letter != " ":
+                    chained_letter = self.grid.get(Point(count_letter + grouping - 1, 0))
+                    grouping += self.recall_grouping_fact(chained_letter) - 1
+                    chain_grouped_letter = self.grid.get(Point(count_letter + grouping - 1, 1))
+                else:
+                    self.grid.write(grouped_letter, Point(count_out, 2))
+                    count_letter += grouping - 1
+                    
 
             count_letter += 1
             count_out += 1
