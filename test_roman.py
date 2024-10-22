@@ -88,11 +88,11 @@ def test_divide():
     g = Grid()
     g.push()
     r = Roman(g)
-    r.write_from_decimal(1234)
+    r.write_from_decimal(3996)
     g.move_pencil(Point(0, 1))
 
     g.push()
-    g.write_s("  LVI")
+    g.write_s("  III")
     g.pop()
 
     g.drag(Point(2, 1))

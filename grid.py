@@ -23,7 +23,7 @@ class Point():
 
 class Grid():
     def __init__(self):
-        self.grid = [[" "] * 50 for _ in range(50)]
+        self.grid = [[" "] * 50 for _ in range(100)]
         self.pencil = Point(0, 0)
         self.eye = Point(0, 0)
         self.origin = Point(0,0)

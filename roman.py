@@ -19,7 +19,7 @@ class Roman():
         self.grid.pop()
         s = [self.grid.get_absolute_point(Point(0, 0))]
 
-        while not self.greater(self.grid.to_relative(abosolute_dividend_loc)):
+        while not self.greater(self.grid.to_relative(abosolute_dividend_loc)) and letter_idx < len(self.letters):
             self.grid.look(Point(0, 0))
             self.grid.newline()
             self.sum(self.grid.to_relative(s[0]))
@@ -71,13 +71,15 @@ class Roman():
             l1 = self.grid.get()
             self.grid.push()
             l2 = self.grid.get(loc)
+            if l1 == " " and l2 == " ": return False
             loc += Point(1, 0)
             self.grid.pop()
             self.grid.shift_one()
-            o = self.recall_ordering_fact(l1, l2)
+            o = self.recall_ordering_fact(l2, l1)
+            
 
             if o == 0: continue
-            return o > 0
+            return o <= 0
 
 
         
@@ -165,7 +167,6 @@ class Roman():
             self.grid.push()
 
             l2 = self.grid.get(other_start)
-            print(l1, l2)
             ord = self.recall_ordering_fact(l1, l2)
             if ord > 0:
                 self.grid.write(l1)
