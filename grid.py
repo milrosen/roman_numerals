@@ -19,11 +19,14 @@ class Point():
     
     def __sub__(self, other):
         return Point(self.x - other.x, self.y - other.y)
+    
+    def __str__(self):
+        return f"({self.x},{self.y})"
 
 
 class Grid():
     def __init__(self):
-        self.grid = [[" "] * 50 for _ in range(100)]
+        self.grid = [[" "] * 90 for _ in range(100)]
         self.pencil = Point(0, 0)
         self.eye = Point(0, 0)
         self.origin = Point(0,0)

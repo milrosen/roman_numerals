@@ -1,5 +1,7 @@
 from grid import Grid, Point
 
+
+
 class Roman():
 
     def __init__(self, grid: Grid) -> None:
@@ -11,6 +13,138 @@ class Roman():
     letters = ["I", "V", "X", "L", "C", "D", "M"]
 
     
+
+
+    def divide_macbeth(self, absolute_dividend_loc :Point):
+        # we want the input to look like DIVISOR   DIVIDEND
+        #                                          IIIIIIVIDEND -- break down number untill it's all ones
+
+        # step one, ungroup the divisor untill it is all I's
+        self.grid.look(Point(0,0))
+        self.grid.move_pencil(Point(0,1))
+        self.fully_ungroup()
+        num_ones = self.size_of_letter_run()
+
+        self.grid.look(self.grid.to_relative(absolute_dividend_loc))
+
+        full_lines = []
+
+        while True:
+            self.grid.move_pencil(Point(0,1))
+
+            self.grid.push()
+            need_to_skip = self.is_improper_form()
+            self.grid.pop()
+
+            if not need_to_skip and self.grid.get() == "I" or self.grid.get() == " ": 
+                break
+
+            if need_to_skip: 
+                self.copy_letter_below()
+                self.ungroup_once()
+                self.grid.shift_one()
+            else:
+                l = self.grid.get()
+                if self.recall_grouping_fact(self.recall_ungroup_letter(l)) == 2 and not need_to_skip :
+                    self.ungroup_letter()
+                else:
+                    self.ungroup_once()
+                    self.grid.shift_one()
+            self.copy_below()
+
+            self.grid.newline()
+            self.grid.push()
+            s = self.size_of_letter_run()
+            while s >= num_ones:
+                full_lines.append(self.grid.get_absolute_point(Point(0,0)))
+                
+                self.grid.write(" ")
+                self.grid.write("✓")
+
+                self.grid.look(Point(num_ones, 0))
+                self.grid.move_pencil(Point(0,1))
+                self.copy_below()
+                self.grid.newline()
+                self.grid.push()
+                s = self.size_of_letter_run()
+
+
+            self.grid.pop()
+            self.grid.move_pencil()
+            self.grid.nudge_pencil(Point(0,1))
+
+        self.grid.newline()
+        self.grid.write_s("Answer \\/ remainder /\\")
+        self.grid.move_pencil(Point(0,1))
+        for pt in full_lines:
+            self.grid.write(self.grid.get_absolute(pt))
+
+    def is_improper_form(self):
+        l = self.grid.get()
+        if l == " ": return False
+        while self.grid.get() == l: self.grid.shift_one()
+        return self.recall_ordering_fact(self.grid.get(), l) > 0
+
+    def copy_letter_below(self):
+        l = self.grid.get()
+        while self.grid.get() == l:
+            self.grid.push()
+            self.grid.write(l)
+            self.grid.pop()
+            self.grid.shift_one()
+
+    def copy_below(self):
+        # whatever the rest of the line is, this fn copies it to wherever the pencil is
+        while (l := self.grid.get()) != " ":
+                self.grid.push()
+                self.grid.write(l)
+                self.grid.pop()
+                self.grid.shift_one()
+
+    def size_of_letter_run(self, p=None):
+        if p == None: p = Point(0,0)
+
+        out = 0
+
+        l = self.grid.get(p)
+
+        if l == ' ': return 0
+
+        while self.grid.get() == l: 
+            out += 1
+            self.grid.shift_one()
+
+        return out
+
+
+    def fully_ungroup(self):
+        self.grid.look(Point(0,0))
+        while (l := self.grid.get()) != "I":
+            while self.grid.get() != 'I' and self.grid.get() != ' ':
+                self.ungroup_letter()
+            while self.grid.get() == "I":
+                self.grid.push()
+                self.grid.write("I")
+                self.grid.pop()
+                self.grid.shift_one()
+            self.grid.newline()
+            self.grid.move_pencil()
+            self.grid.nudge_pencil(Point(0,1))
+
+    def ungroup_letter(self):
+        # assume that the pencil is where we want to write, and the eye is where we want to look
+        letter = self.grid.get()
+        while (l := self.grid.get()) == letter:
+            self.ungroup_once()
+            self.grid.shift_one()
+
+    def ungroup_once(self):
+        ungroup_l = self.recall_ungroup_letter(self.grid.get())
+        amt = self.recall_grouping_fact(ungroup_l)
+        self.grid.push()
+        self.grid.write_s(ungroup_l * amt)
+        self.grid.pop()
+
     def divide(self, abosolute_dividend_loc: Point) -> None:
         letter_idx = 1
         self.grid.push()
@@ -116,7 +250,6 @@ class Roman():
 
             if l == prev_letter:
                 count_letter += 1
-                print(l, count_letter)
                 continue
 
             self.grid.push()
@@ -126,7 +259,6 @@ class Roman():
             grouped_letter = self.recall_group_letter(group_letter)
             
             groups = count_letter // grouping
-            print(l, group_letter, count_letter, grouped_letter, grouping, groups)
 
             for _ in range(groups):
                 self.grid.push()
@@ -234,6 +366,9 @@ class Roman():
     def recall_ungroup_letter(self, l1):
         l1 = l1.lower()
         self.logs.append(("recalls ungroup letter", l1))
+        group = {"v": "i", "x": "v", "l": "x", "c": "l", "d": "c", "m": "d"}
+
+        return group[l1].upper()
 
     def index(l):
         return [" ", "i", "v", "x", "l", "c", "d", "m"].index(l) - 1
@@ -255,3 +390,51 @@ class Roman():
         ]
 
         return table[Roman.index(l1)][Roman.index(l2)].upper()
+    
+
+def helper_divide_macbeth(n, divisor):
+    g = Grid()
+    g.push()
+    r = Roman(g)
+    g.push()
+    r.write_from_decimal(n)
+    g.pop()
+    g.newline()
+    g.move_pencil()
+    r.write_from_decimal(divisor)
+    g.move_pencil(Point(0,1))
+    r.divide_macbeth(Point(0,0))
+
+    return r
+
+def helper_divide(n, divisor):
+    g = Grid()
+    g.push()
+    r = Roman(g)
+    r.write_from_decimal(n)
+    g.move_pencil(Point(0, 1))
+
+    g.push()
+    g.write_s("  ")
+    r.write_from_decimal(divisor)
+    g.pop()
+
+    g.drag(Point(2, 1))
+
+    r.divide(Point(0, 0))
+    return r
+
+if __name__ == "__main__":
+    import tqdm
+    for n in tqdm.tqdm(range(500, 4000)):
+        for divisor in range(2, 100):
+            out_correct = n // divisor
+            g = Grid()
+            r = Roman(g)
+            r.write_from_decimal(out_correct)
+            correct_r = g.get_s(Point(0, 0), 20).strip(" ")
+            try:
+                r_macbeth = helper_divide_macbeth(n, divisor)
+            except:
+                pass
+            r_milton  = helper_divide(n, divisor)

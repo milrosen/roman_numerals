@@ -141,4 +141,63 @@ def test_divide_numbers():
         r.write_from_decimal(out_correct)
         correct_r = g.get_s(Point(0, 0), 20).strip(" ")
         print("true " + correct_r, "returned " + out_r)
+        # assert 0 == 1
         assert correct_r == out_r
+
+def test_ungroup_letters():
+    g = Grid()
+    g.push()
+    r = Roman(g)
+    r.write_from_decimal(16)
+    g.pop()
+    g.move_pencil(Point(0,1))
+    print(g.pretty())
+    r.ungroup_letter()
+
+    print(g.pretty())
+
+    assert g.get_s(Point(0,1), 20).strip(" ") == "VV"
+
+def test_fully_ungroup_letter():
+    g = Grid()
+    g.push()
+    r = Roman(g)
+    r.write_from_decimal(15)
+    g.pop()
+    g.move_pencil(Point(0,1))
+    print(g.pretty())
+    r.fully_ungroup()
+
+    print(g.pretty())
+
+    assert g.get_s(Point(0,0), 20).strip(" ") == "I" * 15
+
+def test_divide_macbeth():
+    n = 672
+    divisor = 45
+    
+    g = Grid()
+    g.push()
+    r = Roman(g)
+    g.push()
+    r.write_from_decimal(n)
+    g.pop()
+    g.newline()
+    g.move_pencil()
+    r.write_from_decimal(divisor)
+    g.move_pencil(Point(0,1))
+    r.divide_macbeth(Point(0,0))
+    print(g.pretty())
+    out_r = g.get_s(Point(0,1), 20).strip(" ")
+    g.pop()
+
+    out_correct = n // divisor
+    g = Grid()
+    r = Roman(g)
+    r.write_from_decimal(out_correct)
+    correct_r = g.get_s(Point(0, 0), 20).strip(" ")
+    assert 0 == 1
+    assert out_r == correct_r
+
+
+   
