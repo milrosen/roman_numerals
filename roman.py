@@ -424,8 +424,59 @@ def helper_divide(n, divisor):
     r.divide(Point(0, 0))
     return r
 
+def add_entry(roman: Roman, object, divisor: int, dividend: int):
+    total_pen_movement = 0
+    total_eye_movement = 0
+    length = 0
+    width = 0
+
+    prev = Point(0,0)
+    for p in roman.grid.eye_history:
+        if p.y >= length: length = p.y
+        if p.x >= width: width = p.x
+
+        d = prev - p
+        total_eye_movement += abs(d.x) + abs(d.y)
+        prev = p
+    
+    prev = Point(0,0)
+    for _, p in roman.grid.writes:
+        d = prev - p
+        total_pen_movement += abs(d.x) + abs(d.y)
+        prev = p
+    
+    object["num_rows"].append(length)
+    object["total_eye_movement"].append(total_eye_movement)
+    object["total_pen_movement"].append(total_pen_movement)
+    object["total_symbols_written"].append(len(roman.grid.writes))
+    object["facts_recalled"].append(len(roman.logs))
+    object["divisor"].append(divisor)
+    object["dividend"].append(dividend)
+    object["width"].append(width)
+
+
 if __name__ == "__main__":
+    import pandas as pd
     import tqdm
+
+    res_milton =  {"num_rows": [], "width": [], "total_eye_movement": [], "total_pen_movement": [], "total_symbols_written": [], "facts_recalled": [], "divisor": [], "dividend": []}
+    res_macbeth = {"num_rows": [], "width": [], "total_eye_movement": [], "total_pen_movement": [], "total_symbols_written": [], "facts_recalled": [], "divisor": [], "dividend": []}
+
+
+    n = 3901
+    d = 13
+
+    r_milton = helper_divide(n, d)
+    r_macbeth = helper_divide_macbeth(n, d)
+
+    print(r_macbeth.grid.pretty())
+    print(r_milton.grid.pretty())
+
+    add_entry(r_milton, res_milton, n, d)
+    add_entry(r_macbeth, res_macbeth, n, d)
+
+    print(res_macbeth, res_milton)
+
     for n in tqdm.tqdm(range(500, 4000)):
         for divisor in range(2, 100):
             out_correct = n // divisor
@@ -435,6 +486,15 @@ if __name__ == "__main__":
             correct_r = g.get_s(Point(0, 0), 20).strip(" ")
             try:
                 r_macbeth = helper_divide_macbeth(n, divisor)
+                add_entry(r_macbeth, res_macbeth, n, divisor)
             except:
                 pass
             r_milton  = helper_divide(n, divisor)
+            add_entry(r_milton, res_milton, n, divisor)
+
+    df_milton = pd.DataFrame(res_milton)
+    df_macbeth = pd.DataFrame(res_macbeth)
+
+    df_milton.to_csv("./data/milton.csv")
+    df_macbeth.to_csv("./data/macbeth.csv")
+

@@ -42,7 +42,7 @@ class Grid():
                 if "eye" in names:
                     self.eye_history.append(self.eye + Point(0, 0))
                 if "write" in names:
-                    self.writes.append(args[0] + " " + str(list(self.pencil + Point(0, 0))))
+                    self.writes.append((args[0], self.pencil + Point(0, 0)))
                 return out
             return logging
         return logging_wrapper

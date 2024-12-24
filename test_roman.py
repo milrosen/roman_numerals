@@ -141,7 +141,7 @@ def test_divide_numbers():
         r.write_from_decimal(out_correct)
         correct_r = g.get_s(Point(0, 0), 20).strip(" ")
         print("true " + correct_r, "returned " + out_r)
-        # assert 0 == 1
+        assert 0 == 1
         assert correct_r == out_r
 
 def test_ungroup_letters():
