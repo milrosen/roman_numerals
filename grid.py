@@ -26,13 +26,15 @@ class Point():
 
 class Grid():
     def __init__(self):
-        self.grid = [[" "] * 90 for _ in range(100)]
+        self.grid = [[" "] * 300 for _ in range(300)]
         self.pencil = Point(0, 0)
         self.eye = Point(0, 0)
         self.origin = Point(0,0)
         self.eye_stack = []
-        self.eye_history = [Point(0, 0)]
-        self.writes = []
+        self.eye_history = 0
+        self.gets = 0
+        self.writes = 0
+        self.max_stack = 0
     
     def logger(names: list):
         def logging_wrapper(f):
@@ -40,9 +42,13 @@ class Grid():
             def logging(self: Self, *args):
                 out = f(self, *args)
                 if "eye" in names:
-                    self.eye_history.append(self.eye + Point(0, 0))
+                    self.eye_history += 1
                 if "write" in names:
-                    self.writes.append((args[0], self.pencil + Point(0, 0)))
+                    self.writes += 1
+                if "get" in names:
+                    self.gets += 1
+                if "max_stack" in names:
+                    self.max_stack = max(len(self.eye_stack), self.max_stack)
                 return out
             return logging
         return logging_wrapper
@@ -53,7 +59,7 @@ class Grid():
     def shift_back(self):
         self.eye.x -= 1
     
-    @logger("eye")
+    @logger("eye get")
     def get(self, loc: Point = None):
         
         if loc is None:
@@ -64,6 +70,7 @@ class Grid():
         x, y = loc
         return self.grid[y][x] 
 
+    @logger("max_stack")
     def push(self):
         self.eye_stack.append(self.eye + Point(0, 0))
     
@@ -74,6 +81,7 @@ class Grid():
     
     def pop(self):
         self.eye = self.eye_stack.pop() + Point(0, 0)
+
     @logger("eye")
     def pan(self, loc: Point):
             self.origin += loc
@@ -82,6 +90,7 @@ class Grid():
     def newline(self):
         self.pan(Point(0, 1))  
 
+    @logger("get")
     def get_absolute_point(self, loc: Point):
         return loc + self.origin
 
@@ -116,14 +125,14 @@ class Grid():
         out = ""
         out += f"Pencil: {list(self.pencil + Point(0, 0))}, Origin: {list(self.origin + Point(0, 0))}, Eye: {list(self.eye + Point(0, 0))}\n"
         for row in self.grid:
-            out += "".join(row) + "|\n"
+            out += "".join(row).rstrip() + '\n'
         return out
     
     
     def nudge_eye(self, dir: Point):
         self.eye = (self.eye + dir)
 
-    @logger("eye")
+    @logger("eye get")
     def get_absolute(self, loc: Point):
         return self.grid[loc.y][loc.x]
     
@@ -139,8 +148,8 @@ class Grid():
     
     def pretty_logs(self):
         out = "Eye History: "
-        out += ', '.join([str(list(pt)) for pt in self.eye_history])
-        out += "\nWrites: "
-        out += ', '.join(self.writes)
+        # out += ', '.join([str(list(pt)) for pt in self.eye_history])
+        # out += "\nWrites: "
+        # out += ', '.join(self.writes)
         return out
     

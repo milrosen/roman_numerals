@@ -77,13 +77,15 @@ print(tree)
 r = base_ten_to_roman(75)
 print(r)
 print(encode_roman(tree, root, r))
+avg_log_factor = 0
 
 avg_inf = 0
 for i in range(2, 4001):
     r = base_ten_to_roman(i)
-    code = encode_roman(tree, root, r)
-    information = math.log2(i) / len(code)
+    # code = encode_roman(tree, root, r)
+    # information = math.log2(i) / len(code)
     # information = (len(r) * 2.5) / math.log2(i)
-    avg_inf += information
-
-print(avg_inf / 4001)
+    # avg_inf += information
+    x = math.exp(math.log(i)/len(r))
+    avg_log_factor += x
+print(avg_log_factor / 4001)

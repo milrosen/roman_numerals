@@ -87,24 +87,19 @@ def test_write_from_decimal():
     assert g.get_s(Point(0, 0), 10) == "MCCXXXIIII"
 
 def test_divide():
+    n = 3999
+    divisor = 99
+    print(n, divisor)
+    out_r = divide_numbers(n, divisor)
+
+    out_correct = n // divisor
     g = Grid()
-    g.push()
     r = Roman(g)
-    r.write_from_decimal(3996)
-    g.move_pencil(Point(0, 1))
-
-    g.push()
-    g.write_s("  III")
-    g.pop()
-
-    g.drag(Point(2, 1))
-
-    r.divide(Point(0, 0))
-
-    print(g.pretty_logs())  
-    print(g.pretty())   
-    print(r.logs)
-    assert g.get_s(Point(5, 0), 9) == "MCCCXXXII"
+    r.write_from_decimal(out_correct)
+    correct_r = g.get_s(Point(0, 0), 20).strip(" ")
+    print("true " + correct_r, "returned " + out_r)
+    assert 0 == 1
+    assert correct_r == out_r
 
 def divide_numbers(n, divisor):
     g = Grid()
@@ -121,6 +116,7 @@ def divide_numbers(n, divisor):
     g.drag(Point(2, 1))
 
     r.divide(Point(0, 0))
+    
 
     # print(g.pretty_logs())  
     print(g.pretty())   
@@ -131,7 +127,6 @@ def test_divide_numbers():
     for i in range(1, 500):
         n = random.randint(100, 4000)
         divisor = random.randint(1, 100)
-        n, divisor = 1663, 43
         print(n, divisor)
         out_r = divide_numbers(n, divisor)
 
@@ -141,7 +136,7 @@ def test_divide_numbers():
         r.write_from_decimal(out_correct)
         correct_r = g.get_s(Point(0, 0), 20).strip(" ")
         print("true " + correct_r, "returned " + out_r)
-        assert 0 == 1
+        # assert 0 == 1
         assert correct_r == out_r
 
 def test_ungroup_letters():
@@ -172,10 +167,7 @@ def test_fully_ungroup_letter():
 
     assert g.get_s(Point(0,0), 20).strip(" ") == "I" * 15
 
-def test_divide_macbeth():
-    n = 672
-    divisor = 45
-    
+def test_divide_macbeth(n=3999, divisor=99):
     g = Grid()
     g.push()
     r = Roman(g)
@@ -188,7 +180,8 @@ def test_divide_macbeth():
     g.move_pencil(Point(0,1))
     r.divide_macbeth(Point(0,0))
     print(g.pretty())
-    out_r = g.get_s(Point(0,1), 20).strip(" ")
+    print(g.writes)
+    out_r = g.get_s(Point(0,0), 20).strip(" ")
     g.pop()
 
     out_correct = n // divisor
@@ -196,8 +189,38 @@ def test_divide_macbeth():
     r = Roman(g)
     r.write_from_decimal(out_correct)
     correct_r = g.get_s(Point(0, 0), 20).strip(" ")
-    assert 0 == 1
+    # assert 0 == 1
+    assert out_r == correct_r
+
+def test_macbeth_fair(n=1621, divisor=3):
+    
+    g = Grid()
+    g.push()
+    r = Roman(g)
+    g.push()
+    r.write_from_decimal(n)
+    g.pop()
+    g.newline()
+    g.move_pencil()
+    r.write_from_decimal(divisor)
+    g.move_pencil(Point(0,1))
+    r.divide_macbeth_fair(Point(0,0))
+    print(g.pretty())
+    out_r = g.get_s(Point(0,0), 20).strip(" ")
+    g.pop()
+
+    out_correct = n // divisor
+    g = Grid()
+    r = Roman(g)
+    r.write_from_decimal(out_correct)
+    correct_r = g.get_s(Point(0, 0), 20).strip(" ")
+    # assert 0 == 1
     assert out_r == correct_r
 
 
-   
+def test_macbeth_fair_a_lot():
+    for _ in range(500):
+        n = random.randint(100, 4000)
+        divisor = random.randint(1, 30)
+        test_macbeth_fair(n, divisor)
+        
