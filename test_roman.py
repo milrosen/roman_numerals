@@ -98,7 +98,7 @@ def test_divide():
     r.write_from_decimal(out_correct)
     correct_r = g.get_s(Point(0, 0), 20).strip(" ")
     print("true " + correct_r, "returned " + out_r)
-    assert 0 == 1
+    # assert 0 == 1
     assert correct_r == out_r
 
 def divide_numbers(n, divisor):
@@ -192,8 +192,7 @@ def test_divide_macbeth(n=3999, divisor=99):
     # assert 0 == 1
     assert out_r == correct_r
 
-def test_macbeth_fair(n=1621, divisor=3):
-    
+def test_macbeth_fair(n=1612, divisor=3):
     g = Grid()
     g.push()
     r = Roman(g)
@@ -221,6 +220,6 @@ def test_macbeth_fair(n=1621, divisor=3):
 def test_macbeth_fair_a_lot():
     for _ in range(500):
         n = random.randint(100, 4000)
-        divisor = random.randint(1, 30)
+        divisor = random.randint(1, 100)
         test_macbeth_fair(n, divisor)
         

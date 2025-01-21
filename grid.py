@@ -32,19 +32,32 @@ class Grid():
         self.origin = Point(0,0)
         self.eye_stack = []
         self.eye_history = 0
+        self.eye_movement = 0
+        self.pencil_movement = 0
         self.gets = 0
         self.writes = 0
         self.max_stack = 0
+        self.px = 0
+        self.py = 0
+        self.pout = ""
     
     def logger(names: list):
         def logging_wrapper(f):
+
             @wraps(f)
             def logging(self: Self, *args):
+                prev_eye = self.eye + Point(0, 0)
+                prev_pen = self.pencil + Point(0, 0)
                 out = f(self, *args)
                 if "eye" in names:
                     self.eye_history += 1
+                    d = self.eye - prev_eye
+                    self.eye_movement += abs(d.x) + abs(d.y)
                 if "write" in names:
                     self.writes += 1
+                if "pencil" in names:
+                    d = self.pencil - prev_pen
+                    self.pencil_movement += abs(d.x) + abs(d.y)
                 if "get" in names:
                     self.gets += 1
                 if "max_stack" in names:
@@ -90,7 +103,6 @@ class Grid():
     def newline(self):
         self.pan(Point(0, 1))  
 
-    @logger("get")
     def get_absolute_point(self, loc: Point):
         return loc + self.origin
 
@@ -113,7 +125,7 @@ class Grid():
         self.grid[y][x] = char
         self.pencil.x += 1
     
-    # @logger(["pencil", "eye"])
+    @logger("pencil")
     def move_pencil(self, loc: Point=None):
         if loc is None: loc = self.eye - self.origin
         self.pencil = loc + self.origin
@@ -121,6 +133,7 @@ class Grid():
     def write_s(self, string: str):
         for char in string:
             self.write(char)
+    
     def pretty(self):
         out = ""
         out += f"Pencil: {list(self.pencil + Point(0, 0))}, Origin: {list(self.origin + Point(0, 0))}, Eye: {list(self.eye + Point(0, 0))}\n"

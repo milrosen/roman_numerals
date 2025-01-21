@@ -86,6 +86,10 @@ for i in range(2, 4001):
     # information = math.log2(i) / len(code)
     # information = (len(r) * 2.5) / math.log2(i)
     # avg_inf += information
+    # len(r) = log_x(i)
+    # len(r) = ln(i)/ln(x)  
+    # ln(x) = ln(i)/len(r)
+    # x = e^(ln(i)/len(r))
     x = math.exp(math.log(i)/len(r))
     avg_log_factor += x
 print(avg_log_factor / 4001)

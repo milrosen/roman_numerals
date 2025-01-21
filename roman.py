@@ -38,13 +38,13 @@ class Roman():
         while True:
             self.grid.pop()
             l = self.grid.get()
+            self.compare_lengths(absolute_dividend_loc)
 
             if l == " ": 
                 if current_letter != "I" and (left_steps % num_ones) != 0:
                     self.grid.nudge_pencil(Point(-left_steps, 1))
                     left_steps = 0
                     current_letter = self.recall_ungroup_letter(current_letter)
-                    print(current_letter, "2")
                     copying = False
                     
                     self.grid.push()
@@ -57,7 +57,6 @@ class Roman():
                     continue
                 else:
                     break
-
 
             if copying:
                 if l == current_letter:
@@ -200,6 +199,27 @@ class Roman():
         # self.grid.move_pencil(Point(0,1))
         for pt in full_lines:
             self.grid.write(self.grid.get_absolute(pt))
+
+    def compare_lengths(self,loc):
+        self.grid.push()
+        while self.grid.get() != " ":
+            self.grid.shift_back()
+        self.grid.shift_one()
+        
+        count = 0
+        l1 = "A"
+        l2 = "A"
+
+        while l1 != " " and l2 != " ":
+            self.grid.push()
+            p = self.grid.to_relative(Point(count, loc.x))
+            self.grid.get(Point(p.x, count))
+            self.grid.pop()
+            l2 = self.grid.get()
+            self.grid.shift_one()
+            count += 1
+
+        self.grid.pop()
 
     def is_improper_form(self):
         l = self.grid.get()
@@ -367,7 +387,8 @@ class Roman():
         self.grid.shift_back()
         prev_letter = self.grid.get()
 
-        while (l := self.grid.get()) != " ":
+        while True:
+            l = self.grid.get()
             self.grid.shift_back()
 
             if l == prev_letter:
@@ -389,30 +410,14 @@ class Roman():
                 self.grid.write(grouped_letter)
                 self.grid.pop()
                 self.grid.nudge_eye(Point(grouping, 0))
+
+            if l == " ": break
             
             count_letter = 1
             if l == grouped_letter: 
                 count_letter += groups
             self.grid.pop()
             prev_letter = l
-        
-        self.grid.shift_back()
-        self.grid.push()
-        self.grid.nudge_eye(Point(2, 0))
-        group_letter = self.grid.get()
-        grouping = self.recall_grouping_fact(group_letter)
-        grouped_letter = self.recall_group_letter(group_letter)
-        groups = count_letter // grouping
-
-        for _ in range(groups):
-            self.grid.push()
-            self.grid.move_pencil()
-            self.grid.nudge_pencil(Point(0, 1))
-            self.grid.write(grouped_letter)
-            self.grid.pop()
-            self.grid.nudge_eye(Point(grouping, 0))
-
-        self.grid.look(Point(0, 0))
 
         count_out = 0
         count_letter = 0
@@ -529,6 +534,21 @@ def helper_divide_macbeth(n, divisor):
 
     return r
 
+def helper_divide_macbeth_fair(n, divisor):
+    g = Grid()
+    g.push()
+    r = Roman(g)
+    g.push()
+    r.write_from_decimal(n)
+    g.pop()
+    g.newline()
+    g.move_pencil()
+    r.write_from_decimal(divisor)
+    g.move_pencil(Point(0,1))
+    r.divide_macbeth_fair(Point(0,0))
+
+    return r
+
 def helper_divide(n, divisor):
     g = Grid()
     g.push()
@@ -548,7 +568,6 @@ def helper_divide(n, divisor):
 
 def add_entry(roman: Roman, object, divisor: int, dividend: int):
     total_pen_movement = 0
-    total_eye_movement = 0
     length = 0
     width = 0
 
@@ -574,15 +593,14 @@ def add_entry(roman: Roman, object, divisor: int, dividend: int):
         width = max(row_len, width)
     
     object["num_rows"].append(length)
-    object["total_eye_movement"].append(roman.grid.eye_history)
-    object["total_pen_movement"].append(total_pen_movement)
+    object["total_eye_movement"].append(roman.grid.eye_movement)
+    object["total_pen_movement"].append(roman.grid.pencil_movement)
     object["total_symbols_written"].append(roman.grid.writes)
     object["facts_recalled"].append(len(roman.logs))
     object["divisor"].append(divisor)
     object["dividend"].append(dividend)
     object["width"].append(width-1)
     object["gets"].append(roman.grid.gets)
-    object["grouping_facts"].append()
     object["max_stack"].append(roman.grid.max_stack)
 
 if __name__ == "__main__":
@@ -590,22 +608,25 @@ if __name__ == "__main__":
     import tqdm
 
     res_milton =  {"num_rows": [], "width": [], "total_eye_movement": [], "total_pen_movement": [], "total_symbols_written": [], "facts_recalled": [], "divisor": [], "dividend": [], "max_stack": [], "gets": []}
-    res_macbeth =  {"num_rows": [], "width": [], "total_eye_movement": [], "total_pen_movement": [], "total_symbols_written": [], "facts_recalled": [], "divisor": [], "dividend": [], "max_stack": [], "gets": []}
+    # res_macbeth =  {"num_rows": [], "width": [], "total_eye_movement": [], "total_pen_movement": [], "total_symbols_written": [], "facts_recalled": [], "divisor": [], "dividend": [], "max_stack": [], "gets": []}
+    res_macbeth_fair =  {"num_rows": [], "width": [], "total_eye_movement": [], "total_pen_movement": [], "total_symbols_written": [], "facts_recalled": [], "divisor": [], "dividend": [], "max_stack": [], "gets": []}
 
     n = 3901
     d = 13
 
     r_milton = helper_divide(n, d)
-    r_macbeth = helper_divide_macbeth(n, d)
+    # r_macbeth = helper_divide_macbeth(n, d)
+    r_macbeth_fair = helper_divide_macbeth_fair(n, d)
 
-    print(r_macbeth.grid.pretty())
+    # print(r_macbeth.grid.pretty())
     print(r_milton.grid.pretty())
+    print(r_macbeth_fair.grid.pretty())
 
     add_entry(r_milton, res_milton, n, d)
-    add_entry(r_macbeth, res_macbeth, n, d)
+    # add_entry(r_macbeth, res_macbeth, n, d)
+    add_entry(r_macbeth_fair, res_macbeth_fair, n, d)
 
-    print(res_macbeth, res_milton)
-
+    print(res_milton, res_macbeth_fair)
     for n in tqdm.tqdm(range(500, 4000)):
         for divisor in range(2, 100):
             # out_correct = n // divisor
@@ -614,15 +635,22 @@ if __name__ == "__main__":
             # r.write_from_decimal(out_correct)
             # correct_r = g.get_s(Point(0, 0), 20).strip(" ")
 
-            r_macbeth = helper_divide_macbeth(n, divisor)
-            add_entry(r_macbeth, res_macbeth, n, divisor)
+            # r_macbeth = helper_divide_macbeth(n, divisor)
+            # add_entry(r_macbeth, res_macbeth, n, divisor)
            
             r_milton  = helper_divide(n, divisor)
             add_entry(r_milton, res_milton, n, divisor)
 
-    df_milton = pd.DataFrame(res_milton)
-    df_macbeth = pd.DataFrame(res_macbeth)
+            r_macbeth_fair = helper_divide_macbeth_fair(n, divisor)
+            add_entry(r_macbeth_fair, res_macbeth_fair, n, divisor)
 
-    df_milton.to_csv("./data/milton_gets.csv")
-    df_macbeth.to_csv("./data/macbeth_full_gets.csv")
+
+
+    df_milton = pd.DataFrame(res_milton)
+    # df_macbeth = pd.DataFrame(res_macbeth)
+    df_macbeth_fair = pd.DataFrame(res_macbeth_fair)
+
+    df_milton.to_csv("./data/milton_again.csv")
+    # df_macbeth.to_csv("./data/macbeth_full_gets.csv")
+    df_macbeth_fair.to_csv("./data/macbeth_again.csv")
 
